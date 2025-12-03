@@ -1,1 +1,87 @@
+### Jak używać biblioteki **toml** w Hacker Lang (w kodzie .hacker)
 
+Biblioteka `toml_handler` (napisana w Go) to samodzielny, skompilowany plik binarny, który możesz wywoływać z Hacker Lang dokładnie tak, jak każdy inny program w systemie. Obsługuje formatowanie TOML (pretty – konwertuje na pretty JSON dla czytelności) oraz wyciąganie wartości po ścieżce (get).
+
+#### 1. Zainstaluj binarkę (jednorazowo)
+
+```bash
+bytes install toml
+```
+
+#### 2. Użycie w pliku `.hacker`
+
+```hacker
+// toml        ! dodaj jako zależność systemową (opcjonalne, tylko informacja)
+
+@TOML_FILE=data.toml
+@OUTPUT=/tmp/result.json  ! Wynik pretty jest w formacie JSON dla łatwości
+
+! Przykład 1: Wypisz ładnie sformatowany TOML (jako pretty JSON)
+> toml pretty data.toml
+
+! Przykład 2: Wypisz ładnie TOML z pliku przez zmienną
+> toml pretty $TOML_FILE
+
+! Przykład 3: Wczytaj TOML z stdin (np. z innego polecenia)
+> curl -s https://example.com/data.toml | toml pretty
+
+! Przykład 4: Pobierz konkretną wartość (ścieżka w stylu .key.subkey[0])
+> toml get .name data.toml
+> toml get .owner.login data.toml
+> toml get .items[0].name config.toml
+
+! Przykład 5: Zapisz wynik do pliku (przekierowanie)
+> toml pretty data.toml > $OUTPUT
+> cat $OUTPUT
+
+! Przykład 6: Użyj w zmiennej (z backticks w Hacker Lang – jeśli masz wersję z obsługą)
+>> RESULT=$(toml_handler get .version go.mod)
+>> echo "Wersja projektu: $RESULT"
+
+! Przykład 7: Sprawdź czy klucz istnieje i reaguj
+? toml_handler get .require data.toml | grep -q "github.com" > echo "Zależności są skonfigurowane!"
+
+! Przykład 8: Pobierz tablicę i przetwórz każdy element (w pętli)
+=5 > echo "Element $I: $(toml_handler get .items[$I].name data.toml)"
+```
+
+#### 3. Najczęściej używane ścieżki (przykłady)
+
+| Co chcesz wyciągnąć            | Ścieżka do toml_handler get                 |
+|--------------------------------|---------------------------------------------|
+| Najwyższy klucz                | `.nazwa_klucza`                             |
+| Zagnieżdżony klucz             | `.klucz.podsłowny`                          |
+| Element tablicy                | `.nazwa[0]`, `.items[5]`                    |
+| Zagnieżdżony + tablica         | `.owner.tasks[0].name`                      |
+| Cały obiekt jako JSON          | `.` (kropka)                                |
+
+#### 4. Gotowy przykładowy plik `toml_demo.hacker`
+
+```hacker
+// toml
+# toml
+
+@FILE=go.mod
+
+> echo "=== Zawartość go.mod (pretty jako JSON) ==="
+> toml pretty $FILE
+
+> echo -e "\n=== Nazwa modułu ==="
+> toml get .module $FILE
+
+> echo -e "\n=== Wersja Go ==="
+> toml get .go $FILE
+
+> echo -e "\n=== Wszystkie zależności ==="
+> toml get .require $FILE | toml_handler pretty
+
+> echo -e "\n=== Pierwsza zależność (nazwa) ==="
+> toml get .require[0].path $FILE
+```
+
+#### 5. Bonus: Użycie z `curl` (konfiguracje)
+
+```hacker
+> curl -s https://example.com/config.toml | toml get .api.key > api_key.txt
+> echo "Klucz API: $(cat api_key.txt)"
+```
