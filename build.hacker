@@ -1,5 +1,6 @@
 // golang
 
 > cd source-code
-> go get toml
+> go get toml_handler
 > go build
+> sudo mv toml_handler toml
