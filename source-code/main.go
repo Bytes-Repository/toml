@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -16,12 +15,11 @@ func main() {
 	args := os.Args[1:]
 	if len(args) < 1 {
 		fmt.Println("Usage:")
-		fmt.Println("  toml pretty <file or ->")
-		fmt.Println("  toml get <path> <file or ->")
+		fmt.Println(" toml pretty <file or ->")
+		fmt.Println(" toml get <path> <file or ->")
 		fmt.Println("Path example: .key.subkey[0]")
 		os.Exit(0)
 	}
-
 	command := args[0]
 	var input string
 	if command == "get" {
